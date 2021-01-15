@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="title">
+  Welcome, {{ username }}!
+</h1>
+
+<h2>
+  The MinecraftMRS server is:
+</h2>
+
+{% if status is not none %}
+<h1 class="title">
+  ONLINE
+</h1>
+<p>There are {{ status.players.online }} players online.</p>
+{% else %}
+<h1 class="title">
+  OFFLINE
+</h1>
+
+<p>
+  Turn the server back on:
+</p>
+
+<div class="has-text-centered">
+  <button id="btn-start-server" class="button is-large">Start server</button>
+</div>
+
+<br>
+
+<article id="request-error-message-box" class="message">
+  <div class="message-header">
+    <p>Message</p>
+    <button class="delete" aria-label="delete"></button>
+  </div>
+  <div id="request-error-message" class="message-body">
+    An error messaged was supposed to appear here. But somehow I fu**ed up.
+  </div>
+</article>
+{% endif %}
+
+<!-- Make request to azure runbook -->
+{% block javascript %}
+<script type=text/javascript>
+  function changeMessageToError(selector) {
+    $(selector).addClass('is-danger')
+    $(selector).removeClass('is-success')
+  }
+
+  function changeMessageToSuccess(selector) {
+    $(selector).addClass('is-success')
+    $(selector).removeClass('is-danger')
+  }
+
+  $('#request-error-message-box').hide()
+
+
+  $('#btn-start-server').click(function() {
+    $.ajax({
+      type: "POST",
+      url: "/start_server_post",
+      success: function(data) {
+        changeMessageToSuccess('#request-error-message-box')
+        $('#request-error-message').text("We have sent a request to start the server.")
+        $('#request-error-message-box').show()
+      },
+      error: function(xhr, status, error) {
+        var err = JSON.parse(xhr.responseText)
+        
+        changeMessageToError('#request-error-message-box')
+        $('#request-error-message').text(err.message)
+        $('#request-error-message-box').show()
+      }
+    });
+  });
+</script>
+{% endblock %}
+
+{% endblock %}
